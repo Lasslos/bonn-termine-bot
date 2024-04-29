@@ -68,9 +68,8 @@ Laslo Hauschild
 def main():
     appointments = get_appointments()
     for appointment in appointments:
-        #if (threshold_date - appointment.date_time).days >= 0:
-        notify(appointment)
-        break
+        if (threshold_date - appointment.date_time).days >= 0:
+            notify(appointment)
 
 
 if __name__ == "__main__":
