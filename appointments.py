@@ -3,6 +3,24 @@ import logging
 import re
 import json
 import http.client as http_client
+from datetime import datetime
+
+
+class Appointment:
+    def __init__(self, date_time, unit, duration, link):
+        self.date_time: datetime = date_time
+        self.unit = unit
+        self.duration = duration
+        self.link = link
+
+    def __str__(self):
+        return f"Date: {self.date_time}, Unit: {self.unit}, Duration: {self.duration} minutes"
+
+    # Parse from json
+    @staticmethod
+    def from_json(json_data):
+        return Appointment(datetime.fromisoformat(json_data["datetime_iso86001"]), json_data["unit"],
+                           json_data["duration"], json_data["link"])
 
 
 def enable_debug():
@@ -14,9 +32,10 @@ def enable_debug():
     requests_log.propagate = True
 
 
-def get_appointments():
+def get_appointments() -> list[Appointment]:
     domain = "https://termine.bonn.de"
-    response = requests.get(domain + "/m/dlz/extern/calendar/?uid=b91bb67b-15cf-44df-ab0b-96ebe25c1ae3", allow_redirects=False)
+    response = requests.get(domain + "/m/dlz/extern/calendar/?uid=b91bb67b-15cf-44df-ab0b-96ebe25c1ae3",
+                            allow_redirects=False)
     # Base url should return 302 with 'wsid' as a parameter in the url
     if response.status_code != 302:
         print("Couldn't get wsid token")
@@ -33,7 +52,8 @@ def get_appointments():
     response2 = requests.get(base_url, cookies=cookies, allow_redirects=False)
 
     # Load request token
-    pattern = r"^(?:.*)<input type='hidden' id='RequestVerificationToken' name='__RequestVerificationToken' value='(.*?)' />"
+    pattern = (r"^(?:.*)<input type='hidden' id='RequestVerificationToken' name='__RequestVerificationToken' value='("
+               r".*?)' />")
     match = re.search(pattern, response2.text, flags=re.MULTILINE)
     if match:
         form_token = match.group(1)
@@ -58,9 +78,10 @@ def get_appointments():
     match = re.search(pattern, response4.text, flags=re.DOTALL)
 
     if match:
-        json_data = match.group(0)
-        # Now you can parse the JSON data using the json module
-        appointments = json.loads(json_data)
+        appointments_json = json.loads(match.group(0))
+        appointments = []
+        for appointment in appointments_json["appointments"]:
+            appointments.append(Appointment.from_json(appointment))
         return appointments
     else:
         print("JSON data not found")
