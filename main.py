@@ -1,3 +1,5 @@
+import time
+
 import smtplib
 import ssl
 from email.utils import formatdate
@@ -65,11 +67,17 @@ Laslo Hauschild
         server.sendmail(sender_email, receiver_email, message)
 
 
-def main():
+def check_appointments():
     appointments = get_appointments()
     for appointment in appointments:
         if (threshold_date - appointment.date_time).days >= 0:
             notify(appointment)
+
+
+def main():
+    while True:
+        check_appointments()
+        time.sleep(60 * 15)
 
 
 if __name__ == "__main__":
