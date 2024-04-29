@@ -20,7 +20,7 @@ class Appointment:
     @staticmethod
     def from_json(json_data):
         return Appointment(datetime.fromisoformat(json_data["datetime_iso86001"]), json_data["unit"],
-                           json_data["duration"], json_data["link"])
+                           json_data["duration"], "https://termine.bonn.de" + json_data["link"])
 
 
 def enable_debug():
